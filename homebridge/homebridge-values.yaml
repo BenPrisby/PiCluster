@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homebridge
+  namespace: homebridge
+data:
+  bluetooth: |+
+    #!/usr/bin/with-contenv sh
+    echo "Starting bluetooth daemon"
+    exec bluetoothd -d
+

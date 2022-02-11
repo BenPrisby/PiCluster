@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homebridge
+  labels:
+    app: homebridge
+  namespace: homebridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homebridge
+  template:
+    metadata:
+      labels:
+        app: homebridge
+      name: homebridge
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: homebridge
+        image: oznu/homebridge:debian-raspberry-pi
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8581
+          name: http
+        - containerPort: 51828
+          name: webhook
+        env:
+        - name: tz
+          value: "America/New_York"
+        # You can change these to ID values to 1000 (ubuntu user) if not using Bluetooth
+        - name: PUID
+          value: "0"
+        - name: PGID
+          value: "0"
+        - name: HOMEBRIDGE_CONFIG_UI
+          value: "1"
+        - name: HOMEBRIDGE_CONFIG_UI_PORT
+          value: "8581"
+        # Comment out the two lines below for packages if you don't need bluetooth
+        - name: PACKAGES
+          value: bluetooth bluez libbluetooth-dev libudev-dev
+        volumeMounts:
+        - name: homebridge
+          mountPath: /homebridge
+          readOnly: false
+        # Comment out the 3 lines directly below this if you don't need Bluetooth
+        - name: bluetooth
+          mountPath: /etc/services.d/bluetoothd
+          readOnly: true
+        securityContext:
+          privileged: true
+          procMount: Default
+      volumes:
+      - name: homebridge
+        persistentVolumeClaim:
+          claimName: homebridge
+      - name: bluetooth
+        configMap:
+          name: homebridge
+          items:
+          - key: bluetooth
+            path: run
+            mode: 0111
+
